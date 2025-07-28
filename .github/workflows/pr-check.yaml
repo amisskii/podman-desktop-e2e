@@ -21,6 +21,18 @@ on:
   merge_group:
   pull_request:
     types: [labeled, synchronize, opened, ready_for_review, reopened]
+  workflow_dispatch:
+    inputs:
+      fork:
+        default: 'podman-desktop'
+        description: 'Podman Desktop repo fork'
+        type: string
+        required: true
+      branch:
+        default: 'main'
+        description: 'Podman Desktop repo branch'
+        type: string
+        required: true
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
@@ -34,6 +46,13 @@ jobs:
     name: testing-farm-test-smoke
     runs-on: ubuntu-latest
     steps: 
+      - name: Set the default env. variables
+        env:
+          DEFAULT_FORK: 'podman-desktop'
+          DEFAULT_BRANCH: 'main'
+        run: |
+          echo "FORK=${{ github.event.inputs.fork || env.DEFAULT_FORK }}" >> $GITHUB_ENV
+          echo "BRANCH=${{ github.event.inputs.branch || env.DEFAULT_BRANCH }}" >> $GITHUB_ENV
       - name: PR check tests on Testing Farm smoke
         id: tf-e2e-smoke
         uses: sclorg/testing-farm-as-github-action@v4
@@ -41,7 +60,7 @@ jobs:
           api_key: ${{ secrets.TF_TOKEN }}
           compose: Fedora-42
           tmt_plan_filter: 'name:/plans/pd-e2e-plan/e2e-smoke'
-          variables: FORK=amisskii;BRANCH=main
+          variables: FORK=${{ env.FORK }};BRANCH=${{ env.BRANCH }}
           
       - name: Download the junit report file from TF 
         run: | 
