@@ -26,5 +26,5 @@ jobs:
         with:
           api_key: ${{ secrets.TF_TOKEN }}
           compose: Fedora-42
-          tmt_plan_filter: 'name:plans/pd-e2e-nightly-plan/e2e-smoke'
+          tmt_plan_filter: 'name:plans/pd-e2e-plan/e2e-smoke'
         
