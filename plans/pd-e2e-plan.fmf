@@ -38,6 +38,8 @@ prepare:
     how: shell
     script: | 
       cd $TMT_TREE
+      echo '!!!!!!!!!!!!!!!!!!!'
+      pwd
       git clone https://github.com/podman-desktop/podman-desktop podman-desktop
 
   - name: Configure user to run Podman in rootless mode.
