@@ -15,145 +15,16 @@ on:
       - '!.github/workflows/build.yaml'
 
 jobs:
-  build-darwin:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macOS-13]
-        go: ['1.22']
-        arch: [amd64, arm64]
-        
-    steps:
-    - name: Check out repository code
-      uses: actions/checkout@v4
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: ${{ matrix.go }}
-
-    - name: build darwin
-      run: ARCH=${{ matrix.arch }} make build-darwin
-
-    - name: upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: darwin-${{ matrix.arch }}
-        path: "./out/darwin-${{ matrix.arch }}/pd-e2e"
-
-  build-windows:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-2019]
-        go: ['1.22']
-        arch: [amd64]
-        
-    steps:
-    - name: Check out repository code
-      uses: actions/checkout@v4
-
-    - name: Set up Go
-      uses: actions/setup-go@v5
-      with:
-        go-version: ${{ matrix.go }}
-
-    - name: build windows
-      run:  $env:ARCH='${{ matrix.arch }}'; make build-windows
-
-    - name: upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: windows-${{ matrix.arch }}
-        path: "./out/windows-${{ matrix.arch }}/pd-e2e.exe"
-
-  oci-build-windows:
-    strategy:
-      matrix:
-        os: [windows]
-        arch: [amd64]
-    needs: 
-      - build-windows
-    name: oci-build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Create binary folder path
-      shell: bash
-      run: mkdir -p oci/bin/${{ matrix.os }}-${{ matrix.arch }}
-
-    - name: Copy binary
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ matrix.os }}-${{ matrix.arch }}
-        path: oci/bin/${{ matrix.os }}-${{ matrix.arch }}
-
-    - name: Set permissions
-      shell: bash
-      run: chmod +x oci/bin/${{ matrix.os }}-${{ matrix.arch }}
-
-    - name: Build
-      shell: bash
-      run: OS=${{ matrix.os }} ARCH=${{ matrix.arch }} E2E_BINARY=pd-e2e.exe make oci-build
-
-    - name: Log in to quay.io Registry
-      uses: redhat-actions/podman-login@v1
-      if: github.event_name == 'push'
-      with:
-        registry: quay.io
-        username: ${{ secrets.QUAY_IO_USERNAME }}
-        password: ${{ secrets.QUAY_IO_PASSWORD }}
-
-    - name: Push image
-      if: github.event_name == 'push'
-      shell: bash
-      run: OS=${{ matrix.os }} ARCH=${{ matrix.arch }} make oci-push
-
-  oci-build-darwin:
-    strategy:
-      matrix:
-        os: [darwin]
-        arch: [amd64, arm64]
-    needs: 
-      - build-darwin
-    name: oci-build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Create binary folder path
-      shell: bash
-      run: mkdir -p oci/bin/${{ matrix.os }}-${{ matrix.arch }}
-
-    - name: Copy binary
-      uses: actions/download-artifact@v4
-      with:
-        name: ${{ matrix.os }}-${{ matrix.arch }}
-        path: oci/bin/${{ matrix.os }}-${{ matrix.arch }}
-
-    - name: Check
-      shell: bash
-      run: ls oci/bin/${{ matrix.os }}-${{ matrix.arch }}
-
-    - name: Build
-      shell: bash
-      run: OS=${{ matrix.os }} ARCH=${{ matrix.arch }} E2E_BINARY=pd-e2e make oci-build
-
-    - name: Log in to quay.io Registry
-      uses: redhat-actions/podman-login@v1
-      if: github.event_name == 'push'
-      with:
-        registry: quay.io
-        username: ${{ secrets.QUAY_IO_USERNAME }}
-        password: ${{ secrets.QUAY_IO_PASSWORD }}
-
-    - name: Push image
-      if: github.event_name == 'push'
-      shell: bash
-      run: OS=${{ matrix.os }} ARCH=${{ matrix.arch }} make oci-push
+  e2e-tests-testing-farm:
+    name: Run All E2E tests on Testing Farm CI 
+    runs-on: ubuntu-24.04
+    permissions:
+      checks: write # required for mikepenz/action-junit-report
+    steps: 
+      - name: PR check tests on Testing Farm 
+        uses: sclorg/testing-farm-as-github-action@v4
+        with:
+          api_key: ${{ secrets.TF_TOKEN }}
+          compose: Fedora-42
+          tmt_plan_filter: 'name:testing-farm/plans/pd-e2e-nightly-plan/e2e-smoke'
         
