@@ -41,6 +41,7 @@ jobs:
           api_key: ${{ secrets.TF_TOKEN }}
           compose: Fedora-42
           tmt_plan_filter: 'name:/plans/pd-e2e-plan/e2e-smoke'
+          variables: FORK=amisskii;BRANCH=main
           
       - name: Download the junit report file from TF 
         run: | 

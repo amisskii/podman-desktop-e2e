@@ -5,7 +5,7 @@ duration: 2h
 framework: shell
 test: |
   export SKIP_COMPOSE_ONBOARDING_TEST=true
-  git clone https://github.com/podman-desktop/podman-desktop.git /$TMT_TREE/podman-desktop
+  git clone -b $BRANCH https://github.com/$FORK/podman-desktop.git /$TMT_TREE/podman-desktop
   cd $TMT_TREE/podman-desktop
   pnpm install
   pnpm test:e2e:smoke
