@@ -37,6 +37,7 @@ prepare:
   - name: Checkout podman-desktop repo
     how: shell
     script: | 
+      cd $TMT_TREE
       git clone https://github.com/podman-desktop/podman-desktop podman-desktop
 
   - name: Configure user to run Podman in rootless mode.
