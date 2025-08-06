@@ -1,9 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 
+OUTPUT_DIR="$TMT_TREE/podman-desktop/tests/playwright/output/"
+
 cd "$TMT_TEST_DATA"
 
-cp "$TMT_TREE/podman-desktop/tests/playwright/output/junit-results.xml" .
+if [ -f "$OUTPUT_DIR/junit-results.xml" ]; then
+  cp "$OUTPUT_DIR/junit-results.xml" .
+else
+  echo "Error: junit-results.xml not found"
+  exit 1
+fi
 
 if [ "$1" -eq 0 ]; then 
   cat <<EOF > ./results.yaml
@@ -18,12 +25,18 @@ EOF
 
 elif [ "$1" -eq 255 ]; then
 
-  if [ -d "$TMT_TREE/tests/playwright/output/traces" ]; then
-    cp -r "$TMT_TREE/tests/playwright/output/traces" .
+  if [ -d "$OUTPUT_DIR/traces" ]; then
+    cp -r "$OUTPUT_DIR/traces" .
+  else 
+    echo "Error: traces directory does not exist"
+    exit 1
   fi
 
-  if [ -d "$TMT_TREE/tests/playwright/output/videos" ]; then 
-    cp -r "$TMT_TREE/tests/playwright/output/videos" .
+  if [ -d "$OUTPUT_DIR/videos" ]; then 
+    cp -r "$OUTPUT_DIR/videos" .
+  else 
+    echo "Error: videos directory does not exist"
+    exit 1
   fi
 
   cat <<EOF > ./results.yaml
