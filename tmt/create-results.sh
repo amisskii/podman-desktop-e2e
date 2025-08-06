@@ -3,6 +3,8 @@ set -euo pipefail
 
 cd "$TMT_TEST_DATA"
 
+ls "$TMT_TREE/tests/playwright/output"
+
 cp "$TMT_TREE/tests/playwright/output/junit-results.xml" .
 
 if [ "$1" -eq 0 ]; then 
