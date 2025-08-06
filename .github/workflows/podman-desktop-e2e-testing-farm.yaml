@@ -47,6 +47,7 @@ jobs:
           echo "FORK=${{ github.event.inputs.fork || env.DEFAULT_FORK }}" >> $GITHUB_ENV
           echo "BRANCH=${{ github.event.inputs.branch || env.DEFAULT_BRANCH }}" >> $GITHUB_ENV
       - name: Run Podman Desktop Playwright E2E tests on Testing Farm CI
+        id: run-e2e-tf
         uses: sclorg/testing-farm-as-github-action@v4
         with:
           api_key: ${{ secrets.TF_TOKEN }}
@@ -57,11 +58,11 @@ jobs:
       - name: Extract Testing Farm work ID and base URL
         if: always()
         run: |
-          TF_ARTIFACTS_URL="${{ steps.tf-e2e-smoke.outputs.test_log_url }}"
+          TF_ARTIFACTS_URL="${{ steps.run-e2e-tf.outputs.test_log_url }}"
           TF_DEFAULT_JUNIT_DEFAULT="${TF_ARTIFACTS_URL}/results-junit.xml"
           curl -o results-junit.xml "$TF_DEFAULT_JUNIT_DEFAULT"
 
-          TF_WORK_ID=$(grep -o 'work-e2e-smoke[^/"]*' results-junit.xml | head -1)
+          TF_WORK_ID=$(grep -o 'work-e2e[^/"]*' results-junit.xml | head -1)
 
           echo "TF_WORK_ID=$TF_WORK_ID" >> $GITHUB_ENV
           echo "TF_ARTIFACTS_URL=$TF_ARTIFACTS_URL" >> $GITHUB_ENV
@@ -69,7 +70,7 @@ jobs:
       - name: Download Playwright JUnit report from Testing Farm
         if: always()
         run: |
-          TF_PLAYWRIGHT_JUNIT_URL="${{ env.TF_ARTIFACTS_URL }}/${{ env.TF_WORK_ID }}/plans/pd-e2e-plan/e2e-smoke/execute/data/guest/default-0/tests/tmt/e2e-smoke-1/data/junit-results.xml"
+          TF_PLAYWRIGHT_JUNIT_URL="${{ env.TF_ARTIFACTS_URL }}/${{ env.TF_WORK_ID }}/plans/pd-e2e-plan/e2e/execute/data/guest/default-0/tests/tmt/e2e-1/data/junit-results.xml"
           curl -o playwright-junit-results.xml "$TF_PLAYWRIGHT_JUNIT_URL"
 
       - name: Publish test report to PR
@@ -88,7 +89,7 @@ jobs:
         run: |
           mkdir -p results
 
-          TF_TEST_DATA_URL="${{ env.TF_ARTIFACTS_URL }}/${{ env.TF_WORK_ID }}/plans/pd-e2e-plan/e2e-smoke/execute/data/guest/default-0/tests/tmt/e2e-smoke-1/data"
+          TF_TEST_DATA_URL="${{ env.TF_ARTIFACTS_URL }}/${{ env.TF_WORK_ID }}/plans/pd-e2e-plan/e2e/execute/data/guest/default-0/tests/tmt/e2e-1/data"
           TF_TRACES_URL="${TF_TEST_DATA_URL}/traces/"
           TF_VIDEOS_URL="${TF_TEST_DATA_URL}/videos/"
 
