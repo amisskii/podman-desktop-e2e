@@ -53,3 +53,68 @@ jobs:
           compose: Fedora-42
           tmt_plan_filter: 'name:/plans/pd-e2e-plan/e2e'
           variables: FORK=${{ env.FORK }};BRANCH=${{ env.BRANCH }}
+
+      - name: Extract Testing Farm work ID and base URL
+        if: always()
+        run: |
+          TF_ARTIFACTS_URL="${{ steps.tf-e2e-smoke.outputs.test_log_url }}"
+          TF_DEFAULT_JUNIT_DEFAULT="${TF_ARTIFACTS_URL}/results-junit.xml"
+          curl -o results-junit.xml "$TF_DEFAULT_JUNIT_DEFAULT"
+
+          TF_WORK_ID=$(grep -o 'work-e2e-smoke[^/"]*' results-junit.xml | head -1)
+
+          echo "TF_WORK_ID=$TF_WORK_ID" >> $GITHUB_ENV
+          echo "TF_ARTIFACTS_URL=$TF_ARTIFACTS_URL" >> $GITHUB_ENV
+
+      - name: Download Playwright JUnit report from Testing Farm
+        if: always()
+        run: |
+          TF_PLAYWRIGHT_JUNIT_URL="${{ env.TF_ARTIFACTS_URL }}/${{ env.TF_WORK_ID }}/plans/pd-e2e-plan/e2e-smoke/execute/data/guest/default-0/tests/tmt/e2e-smoke-1/data/junit-results.xml"
+          curl -o playwright-junit-results.xml "$TF_PLAYWRIGHT_JUNIT_URL"
+
+      - name: Publish test report to PR
+        if: always()
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3
+        with:
+          fail_on_failure: true
+          include_passed: true
+          detailed_summary: true
+          annotate_only: true
+          require_tests: true
+          report_paths: '**/playwright-junit-results.xml'
+
+      - name: Download test artifacts from Testing Farm
+        if: always()
+        run: |
+          mkdir -p results
+
+          TF_TEST_DATA_URL="${{ env.TF_ARTIFACTS_URL }}/${{ env.TF_WORK_ID }}/plans/pd-e2e-plan/e2e-smoke/execute/data/guest/default-0/tests/tmt/e2e-smoke-1/data"
+          TF_TRACES_URL="${TF_TEST_DATA_URL}/traces/"
+          TF_VIDEOS_URL="${TF_TEST_DATA_URL}/videos/"
+
+          echo "Downloading traces"
+          wget \
+            --recursive \
+            --no-parent \
+            --no-host-directories \
+            --cut-dirs=10 \
+            --reject "index.html*" \
+            --directory-prefix=results \
+            "$TF_TRACES_URL"
+
+          echo "Downloading videos"
+          wget \
+            --recursive \
+            --no-parent \
+            --no-host-directories \
+            --cut-dirs=10 \
+            --reject "index.html*" \
+            --directory-prefix=results \
+            "$TF_VIDEOS_URL"
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testing-farm-artifacts
+          path: results/*
