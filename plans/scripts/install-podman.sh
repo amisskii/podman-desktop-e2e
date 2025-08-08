@@ -19,7 +19,8 @@ else
 fi
 
 INSTALLED_PODMAN_VERSION="$(podman --version | cut -d ' ' -f 3)"
-echo "Podman version: $INSTALLED_PODMAN_VERSRION !"
+echo "Podman version: $INSTALLED_PODMAN_VERSION!"
+
 
 if [[ "$INSTALLED_PODMAN_VERSION" != "$PODMAN_VERSION" ]]; then
     echo "Podman version mismatch: expected $PODMAN_VERSION but got $INSTALLED_PODMAN_VERSION"
