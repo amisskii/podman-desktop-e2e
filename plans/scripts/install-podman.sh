@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu
 sudo dnf repolist
-sudo dnf remove podman
+sudo dnf remove -y podman
 COMPOSE_VERSION="fc$(echo "$COMPOSE" | cut -d '-' -f 2)"
 CUSTOM_PODMAN_URL="https://kojipkgs.fedoraproject.org//packages/podman/${PODMAN_VERSION}/1.${COMPOSE_VERSION}/${ARCH}/podman-${PODMAN_VERSION}-1.${COMPOSE_VERSION}.${ARCH}.rpm"
 
