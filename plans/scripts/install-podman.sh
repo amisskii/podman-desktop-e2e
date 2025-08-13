@@ -13,6 +13,7 @@ CUSTOM_PODMAN_URL="https://kojipkgs.fedoraproject.org//packages/podman/${PODMAN_
 #   - "latest": install the latest stable release from the official Fedora repositories
 #   - any other version string: download and install the matching RPM directly from Fedora Koji
 if [[ "$PODMAN_VERSION" == "nightly" ]]; then
+    sudo dnf copr enable -y rhcontainerbot/podman-next
     sudo dnf install -y podman --enablerepo=copr:copr.fedorainfracloud.org:rhcontainerbot:podman-next
 elif [[ "$PODMAN_VERSION" == "latest" ]]; then
     sudo dnf install -y podman --disablerepo=testing-farm-tag-repository
