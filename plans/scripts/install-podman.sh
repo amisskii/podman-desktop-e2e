@@ -8,9 +8,13 @@ sudo dnf remove -y podman
 COMPOSE_VERSION="fc$(echo "$COMPOSE" | cut -d '-' -f 2)"
 CUSTOM_PODMAN_URL="https://kojipkgs.fedoraproject.org//packages/podman/${PODMAN_VERSION}/1.${COMPOSE_VERSION}/${ARCH}/podman-${PODMAN_VERSION}-1.${COMPOSE_VERSION}.${ARCH}.rpm"
 
-# If the latest stable Podman version is requested, install it from the official Fedora repository.
-# Otherwise, download and install the specific RPM package.
-if [[ "$PODMAN_VERSION" == "latest" ]]; then
+# Install Podman based on the requested version:
+#   - "nightly": install the latest nightly build from the rhcontainerbot/podman-next COPR repository
+#   - "latest": install the latest stable release from the official Fedora repositories
+#   - any other version string: download and install the matching RPM directly from Fedora Koji
+if [[ "$PODMAN_VERSION" == "nightly" ]]; then
+    sudo dnf install -y podman --enablerepo=copr:copr.fedorainfracloud.org:rhcontainerbot:podman-next
+elif [[ "$PODMAN_VERSION" == "latest" ]]; then
     sudo dnf install -y podman --disablerepo=testing-farm-tag-repository
     PODMAN_VERSION="$(curl -s https://api.github.com/repos/containers/podman/releases/latest | jq -r .tag_name | sed 's/^v//')"
 else
