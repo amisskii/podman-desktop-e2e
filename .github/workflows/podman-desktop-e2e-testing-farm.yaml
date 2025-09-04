@@ -84,7 +84,7 @@ jobs:
           TF_DEFAULT_JUNIT_DEFAULT="${TF_ARTIFACTS_URL}/results-junit.xml"
           curl -o results-junit.xml "$TF_DEFAULT_JUNIT_DEFAULT"
 
-          TF_WORK_ID=$(grep -o 'work-e2e[^/"]*' results-junit.xml | head -1)
+          TF_WORK_ID=$(grep -o 'work-${{ env.NPM_TARGET }}[^/"]*' results-junit.xml | head -1)
 
           echo "TF_WORK_ID=$TF_WORK_ID" >> $GITHUB_ENV
           echo "TF_ARTIFACTS_URL=$TF_ARTIFACTS_URL" >> $GITHUB_ENV
