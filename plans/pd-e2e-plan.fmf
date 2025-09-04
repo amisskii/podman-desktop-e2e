@@ -73,7 +73,7 @@ prepare:
       script: bash $TMT_TREE/plans/scripts/install-kind.sh
     - name: Install Kubectl
       how: shell
-      script: bash $TMT_TREE/plans/scripts/install-Kubectl.sh
+      script: bash $TMT_TREE/plans/scripts/install-kubectl.sh
     - name: Configure docker engine to run kind cluster
       how: shell
       script: bash $TMT_TREE/plans/scripts/configure-docker.sh
@@ -91,7 +91,7 @@ prepare:
       script: bash $TMT_TREE/plans/scripts/install-kind.sh
     - name: Install Kubectl
       how: shell
-      script: bash $TMT_TREE/plans/scripts/install-Kubectl.sh
+      script: bash $TMT_TREE/plans/scripts/install-kubectl.sh
     - name: Configure docker engine to run kind cluster
       how: shell
       script: bash $TMT_TREE/plans/scripts/configure-docker.sh
