@@ -181,6 +181,51 @@ jobs:
         arm-client-id: ${{ secrets.ARM_CLIENT_ID }}
         arm-client-secret: ${{ secrets.ARM_CLIENT_SECRET }}
 
+    - name: Generate Infrastructure Bug Report
+      if: failure()
+      shell: bash
+      env:
+        INFRA_PATH: "infra-failure-results.xml"
+        RUN_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      run: |
+        pip install junitparser
+        python3 - <<EOF
+        import os
+        import glob
+        from junitparser import TestCase, TestSuite, JUnitXml, Failure
+
+        infra_path = os.environ.get('INFRA_PATH')
+        run_url = os.environ.get('RUN_URL')
+
+        # 1. Search recursively for ANY junit-style results.xml
+        # We look for common patterns used in podman-desktop/e2e
+        possible_reports = glob.glob("**/*results.xml", recursive=True)
+        
+        # 2. Filter out the file we are about to create if it already exists
+        real_reports = [f for f in possible_reports if f != infra_path]
+
+        if not real_reports:
+            print("No Playwright reports found anywhere in the workspace. Generating infra XML...")
+            xml = JUnitXml()
+            suite = TestSuite("Infrastructure Failures")
+            
+            testcase = TestCase("Workflow Step Failure")
+            testcase.classname = "Infrastructure"
+            
+            msg = "Infrastructure failure: The workflow crashed before tests could report results."
+            details = f"Check the logs for Instance Creation or Setup steps.\nLogs: {run_url}"
+            
+            testcase.result = [Failure(msg)]
+            testcase.system_out = details
+            
+            suite.add_testcase(testcase)
+            xml.add_testsuite(suite)
+            xml.write(infra_path)
+            print(f"Generated {infra_path}")
+        else:
+            print(f"Found existing reports: {real_reports}. Skipping infra report.")
+        EOF
+
     - name: Publish Test Report
       uses: mikepenz/action-junit-report@v5
       if: always() # always run even if the previous step fails
@@ -195,7 +240,9 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
+        if-no-files-found: warn      # This must be indented under 'with'
         name: win-${{ matrix.windows-version }}${{ matrix.windows-featurepack }}
         path: |
           results/*
           **/workflow-run-attributes.json
+          **/infra-failure-results.xml  # Add this back if you want it included
