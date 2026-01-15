@@ -197,14 +197,9 @@ jobs:
         infra_path = os.environ.get('INFRA_PATH')
         run_url = os.environ.get('RUN_URL')
 
-        # 1. Search recursively for ANY junit-style results.xml
-        # We look for common patterns used in podman-desktop/e2e
-        possible_reports = glob.glob("**/*results.xml", recursive=True)
-        
-        # 2. Filter out the file we are about to create if it already exists
-        real_reports = [f for f in possible_reports if f != infra_path]
+        playwright_report = glob.glob("**/*results.xml", recursive=True)
 
-        if not real_reports:
+        if not playwright_report:
             print("No Playwright reports found anywhere in the workspace. Generating infra XML...")
             xml = JUnitXml()
             suite = TestSuite("Infrastructure Failures")
@@ -213,7 +208,7 @@ jobs:
             testcase.classname = "Infrastructure"
             
             msg = "Infrastructure failure: The workflow crashed before tests could report results."
-            details = f"Check the logs for Instance Creation or Setup steps.\nLogs: {run_url}"
+            details = f"Logs: {run_url}"
             
             testcase.result = [Failure(msg)]
             testcase.system_out = details
@@ -223,7 +218,7 @@ jobs:
             xml.write(infra_path)
             print(f"Generated {infra_path}")
         else:
-            print(f"Found existing reports: {real_reports}. Skipping infra report.")
+            print(f"Found existing reports. Skipping infra report.")
         EOF
 
     - name: Publish Test Report
@@ -240,7 +235,7 @@ jobs:
       uses: actions/upload-artifact@v4
       if: always()
       with:
-        if-no-files-found: warn      # This must be indented under 'with'
+        if-no-files-found: warn
         name: win-${{ matrix.windows-version }}${{ matrix.windows-featurepack }}
         path: |
           results/*
