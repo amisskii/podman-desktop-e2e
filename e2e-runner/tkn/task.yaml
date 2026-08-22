@@ -42,7 +42,7 @@ spec:
   # Image Configuration
   - name: image-version
     description: 'e2e-runner image version, ie: v0.1.1 or nightly'
-    default: 'nightly'
+    default: '3873e41'
 
   # Podman Configuration
   - name: podman-download-url
