@@ -45,7 +45,11 @@ def extract_json(raw: str) -> dict:
     start = raw.find("{")
     if start < 0:
         raise ValueError("No JSON object found in input")
-    return json.loads(raw[start:])
+    # The model may wrap the report in a ```json … ``` markdown fence, leaving a
+    # trailing fence after the closing brace. raw_decode parses the first JSON
+    # value and ignores whatever follows.
+    obj, _ = json.JSONDecoder().raw_decode(raw[start:])
+    return obj
 
 
 def format_workflow_text(data: dict, artifacts_url: str | None = None, pipeline_name: str | None = None) -> str:

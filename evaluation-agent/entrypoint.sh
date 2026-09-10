@@ -132,10 +132,27 @@ if [[ "$is_error" == "true" ]]; then
   exit 1
 fi
 
-# The skill's evaluation report is the .result field of the JSON envelope.
+# The skill's evaluation report is the .result field of the JSON envelope. The
+# model may wrap it in a ```json … ``` markdown fence, so extract the first JSON
+# object (ignoring any surrounding fence/prose) and normalize to clean JSON.
+RAW_FILE="$(mktemp)"
 EVAL_FILE="$(mktemp)"
-trap 'rm -rf "$CLAUDE_CONFIG_DIR" "$OUT_FILE" "$EVAL_FILE"' EXIT
-jq -r '.result' "$OUT_FILE" >"$EVAL_FILE"
+trap 'rm -rf "$CLAUDE_CONFIG_DIR" "$OUT_FILE" "$RAW_FILE" "$EVAL_FILE"' EXIT
+jq -r '.result' "$OUT_FILE" >"$RAW_FILE"
+
+if ! python3 -c '
+import json, sys
+raw = sys.stdin.read()
+start = raw.find("{")
+if start < 0:
+    sys.exit("no JSON object found in result")
+obj, _ = json.JSONDecoder().raw_decode(raw[start:])
+json.dump(obj, sys.stdout)
+' <"$RAW_FILE" >"$EVAL_FILE"; then
+  log "ERROR: could not extract JSON from agent result"
+  cat "$RAW_FILE" >&2 || true
+  exit 1
+fi
 
 # Validate the skill produced parseable evaluation JSON before we act on it.
 if ! jq -e '.summary and (.failures | type == "array")' "$EVAL_FILE" >/dev/null 2>&1; then

@@ -87,7 +87,7 @@ spec:
 
   steps:
   - name: evaluate
-    image: quay.io/rh_ee_amisskii/evaluation-agent:v0.1.0
+    image: quay.io/rh_ee_amisskii/evaluation-agent:v0.1.1
     # Versions can be overridden; force a pull so an overridden tag is honored.
     imagePullPolicy: Always
     env:
