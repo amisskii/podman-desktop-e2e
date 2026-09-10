@@ -87,7 +87,7 @@ spec:
 
   steps:
   - name: evaluate
-    image: $(params.image-repository):$(params.image-version)
+    image: quay.io/rh_ee_amisskii/evaluation-agent
     # Versions can be overridden; force a pull so an overridden tag is honored.
     imagePullPolicy: Always
     env:
